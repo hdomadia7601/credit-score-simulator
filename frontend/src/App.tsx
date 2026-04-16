@@ -8,7 +8,11 @@ import type {
   ScoreResponse,
 } from './lib/types'
 
-import { calculateScore, getExplanation, simulateScenario } from './lib/api'
+// ✅ API IMPORTS
+import { calculateScore } from './api/credit'
+import { getExplanation } from './api/ai'
+import { simulateScenario } from './lib/api'
+
 import { useSessionStorageState } from './hooks/useSessionStorageState'
 import InputPanel from './components/InputPanel'
 import ScoreDisplay from './components/ScoreDisplay'
@@ -33,6 +37,7 @@ export default function App() {
     'creditScoreSimulator.inputs',
     DEFAULT_INPUTS,
   )
+
   const [lastScore, setLastScore] = useSessionStorageState<ScoreResponse | null>(
     'creditScoreSimulator.lastScore',
     null,
@@ -42,14 +47,19 @@ export default function App() {
   const [loadingScore, setLoadingScore] = useState(false)
   const [scoreError, setScoreError] = useState<string | null>(null)
 
-  // Debounce scoring so slider drags feel smooth.
+  // -----------------------------
+  // SCORING (BACKEND CONNECTED)
+  // -----------------------------
   useEffect(() => {
     let cancelled = false
+
     const t = window.setTimeout(async () => {
       setLoadingScore(true)
       setScoreError(null)
+
       try {
         const res = await calculateScore(inputs)
+
         if (!cancelled) {
           setScore(res)
           setLastScore(res)
@@ -67,8 +77,12 @@ export default function App() {
     }
   }, [inputs, setLastScore])
 
+  // -----------------------------
+  // APPROVAL COLOR
+  // -----------------------------
   const approvalColor = useMemo(() => {
     const status: ApprovalStatus | null = score?.approval_status ?? null
+
     if (!status) return 'border-gray-200 bg-white text-gray-700'
     if (status === 'High Approval') return 'border-emerald-200 bg-emerald-50 text-emerald-700'
     if (status === 'Moderate Approval') return 'border-blue-200 bg-blue-50 text-blue-700'
@@ -99,10 +113,12 @@ export default function App() {
         transition={{ duration: 0.35, ease: 'easeOut' }}
         className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 py-8 xl:grid-cols-12"
       >
+        {/* INPUTS */}
         <aside className="space-y-6 xl:col-span-3 xl:sticky xl:top-24 self-start">
           <InputPanel inputs={inputs} onChange={(next) => setInputs(next)} />
         </aside>
 
+        {/* CENTER */}
         <section className="space-y-6 xl:col-span-6">
           <ScoreDisplay
             score={score}
@@ -133,36 +149,58 @@ export default function App() {
           </AnimatePresence>
         </section>
 
+        {/* RIGHT SIDE AI */}
         <aside className="space-y-6 xl:col-span-3 xl:sticky xl:top-24 self-start">
+
+          {/* 🔥 FIX 1 — Dynamic AI Explanation */}
           <AIExplanation
             disabled={!score}
             inputs={inputs}
             score={score}
             onExplain={async ({ question }) => {
               if (!score) throw new Error('Score missing')
+
               const payload = {
                 inputs,
                 credit_score: score.credit_score,
                 factor_breakdown: score.factor_breakdown,
-                question,
-              } satisfies Parameters<typeof getExplanation>[0]
+
+                // 🔥 force variation every time
+                question: `${question} (give a slightly different perspective this time)`,
+              }
+
               const res = await getExplanation(payload)
               return res as ExplanationResponse
             }}
           />
 
+          {/* 🔥 FIX 2 — Chat Memory Added */}
           <ChatAssistant
             disabled={!score}
             inputs={inputs}
             score={score}
-            onAsk={async ({ question }) => {
+            onAsk={async ({ question, history }) => {
               if (!score) throw new Error('Score missing')
+
+              const conversation = history
+                ?.map((h: any) => `${h.role}: ${h.content}`)
+                .join('\n')
+
               const payload = {
                 inputs,
                 credit_score: score.credit_score,
                 factor_breakdown: score.factor_breakdown,
-                question,
-              } satisfies Parameters<typeof getExplanation>[0]
+
+                // 🧠 memory injected here
+                question: `
+Previous conversation:
+${conversation || "None"}
+
+User question:
+${question}
+`,
+              }
+
               const res = await getExplanation(payload)
               return res as ExplanationResponse
             }}
@@ -172,4 +210,3 @@ export default function App() {
     </div>
   )
 }
-

@@ -5,7 +5,13 @@ import type {
   ScoreResponse,
 } from './types'
 
-const API_BASE = '/api'
+// In development we proxy `/api` to FastAPI via Vite.
+// In production (Vercel) set `VITE_API_BASE_URL` to your Render backend URL,
+// e.g. "https://credit-score-backend.onrender.com".
+const API_BASE =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) && import.meta.env.VITE_API_BASE_URL !== ''
+    ? import.meta.env.VITE_API_BASE_URL
+    : '/api'
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {

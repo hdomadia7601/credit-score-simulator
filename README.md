@@ -32,10 +32,20 @@ Minimal, corporate credit-score simulator with explainability and optional AI gu
 
 This repo is deployable as two services:
 
-1. Frontend (static): build the React app and host the `dist/` output (or use the provided `frontend/Dockerfile`).
-2. Backend (API): run the FastAPI app (or use `backend/Dockerfile`).
+1. Frontend (static, Vercel):
+   - Import the repo into Vercel.
+   - Set the project root to `frontend`.
+   - Framework: Vite / Other.
+   - Build command: `npm run build`
+   - Output directory: `dist`
+   - Environment variable: `VITE_API_BASE_URL=https://<your-render-service>.onrender.com`
 
-Because the app uses a REST API, both pieces must be hosted together (or proxied) so the frontend can reach `/api/*`.
+2. Backend (API, Render):
+   - From Render, "New + Blueprint" and point it at this repo.
+   - Render will detect `render.yaml` and create a web service using `backend/Dockerfile`.
+   - After first deploy, copy the public URL (e.g. `https://credit-score-backend.onrender.com`) into the Vercel `VITE_API_BASE_URL` value.
+
+Because the app uses a REST API, both pieces must be hosted together (Vercel + Render) so the frontend can reach the backend using `VITE_API_BASE_URL`.
 
 ## CI
 

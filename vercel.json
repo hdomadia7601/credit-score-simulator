@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "name": "credit-score-simulator-frontend",
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "env": {
+    "VITE_API_BASE_URL": "https://your-render-backend.onrender.com"
+  }
+}
+

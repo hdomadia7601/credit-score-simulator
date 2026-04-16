@@ -15,8 +15,13 @@ def _origins() -> list[str]:
     return [o.strip() for o in raw.split(",") if o.strip()]
 
 
-app = FastAPI(title="Credit Score Simulator API")
+app = FastAPI(
+    title="Credit Score Simulator API",
+    version="1.0.0",
+    description="Backend for credit score simulation, breakdown, and AI explanations",
+)
 
+# CORS (important for React frontend)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins(),
@@ -25,10 +30,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
+# Prefix all routes → cleaner structure
+app.include_router(router, prefix="/api")
 
+@app.get("/")
+def root() -> dict[str, str]:
+    return {"message": "Credit Score API is running"}
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
-

@@ -69,39 +69,71 @@ export default function App() {
 
   const approvalColor = useMemo(() => {
     const status: ApprovalStatus | null = score?.approval_status ?? null
-    if (!status) return 'bg-gray-50 text-gray-700 border-gray-200'
-    if (status === 'High Approval') return 'bg-blue-50 text-blue-800 border-blue-200'
-    if (status === 'Moderate Approval') return 'bg-gray-50 text-gray-800 border-gray-200'
-    return 'bg-gray-50 text-gray-800 border-gray-200'
+    if (!status) return 'border-gray-200 bg-white text-gray-700'
+    if (status === 'High Approval') return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+    if (status === 'Moderate Approval') return 'border-blue-200 bg-blue-50 text-blue-700'
+    return 'border-red-200 bg-red-50 text-red-700'
   }, [score?.approval_status])
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-5">
           <div>
-            <div className="text-sm text-gray-500">Credit Score Simulator</div>
-            <div className="text-lg font-semibold tracking-tight text-gray-900">
-              Understand what moves your score
+            <div className="text-xs font-medium uppercase tracking-[0.18em] text-gray-500">
+              Fintech Simulator
+            </div>
+            <div className="mt-1 text-2xl font-semibold tracking-tight text-gray-950">
+              Credit Score Intelligence
             </div>
           </div>
-          <div className="text-right text-xs text-gray-500">
-            Inputs persist only for this session (sessionStorage)
+          <div className="text-right text-xs font-medium text-gray-500">
+            Session-based • Real-time
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
-        <section className="space-y-6">
-          <InputPanel
-            inputs={inputs}
-            onChange={(next) => setInputs(next)}
-          />
+      <motion.main
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 py-8 xl:grid-cols-12"
+      >
+        <aside className="space-y-6 xl:col-span-3 xl:sticky xl:top-24 self-start">
+          <InputPanel inputs={inputs} onChange={(next) => setInputs(next)} />
+        </aside>
 
-          <ScoreDisplay score={score} loading={loadingScore} error={scoreError} approvalColor={approvalColor} />
+        <section className="space-y-6 xl:col-span-6">
+          <ScoreDisplay
+            score={score}
+            loading={loadingScore}
+            error={scoreError}
+            approvalColor={approvalColor}
+          />
 
           <FactorBreakdownView breakdown={score?.factor_breakdown ?? null} />
 
+          <ScenarioComparison
+            current={score}
+            inputs={inputs}
+            onCompare={simulateScenario}
+          />
+
+          <AnimatePresence>
+            {score && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm text-gray-600 shadow-sm"
+              >
+                Tip: test one improvement at a time to understand which action creates the biggest lift.
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </section>
+
+        <aside className="space-y-6 xl:col-span-3 xl:sticky xl:top-24 self-start">
           <AIExplanation
             disabled={!score}
             inputs={inputs}
@@ -119,27 +151,6 @@ export default function App() {
             }}
           />
 
-          <ScenarioComparison
-            current={score}
-            inputs={inputs}
-            onCompare={simulateScenario}
-          />
-
-          <AnimatePresence>
-            {score && (
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="text-xs text-gray-500"
-              >
-                Tip: Improve one driver at a time to see clearer deltas.
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </section>
-
-        <aside className="lg:sticky lg:top-6 self-start">
           <ChatAssistant
             disabled={!score}
             inputs={inputs}
@@ -157,7 +168,7 @@ export default function App() {
             }}
           />
         </aside>
-      </main>
+      </motion.main>
     </div>
   )
 }

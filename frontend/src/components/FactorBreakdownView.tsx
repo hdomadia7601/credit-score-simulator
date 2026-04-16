@@ -17,16 +17,22 @@ export default function FactorBreakdownView({ breakdown }: { breakdown: FactorBr
   ] as const
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <div className="text-sm font-semibold text-gray-900">Factor breakdown</div>
-      <div className="text-xs text-gray-500 mt-1">
-        Explainability values: how each factor shifts your estimate.
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="text-xs font-medium uppercase tracking-[0.18em] text-gray-500">
+        Factor Breakdown
+      </div>
+      <div className="mt-2 text-lg font-semibold text-gray-950">
+        Why the score moved
+      </div>
+      <div className="mt-1 text-sm text-gray-500">
+        Each driver contributes positive or negative pressure to the model.
       </div>
 
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="mt-6 space-y-4">
         {items.map((it) => {
           const v = breakdown ? breakdown[it.key] : null
           const pos = v !== null && v >= 0
+          const width = v === null ? 12 : Math.max(12, Math.min(100, Math.abs(v) / 1.6))
 
           return (
             <motion.div
@@ -34,19 +40,33 @@ export default function FactorBreakdownView({ breakdown }: { breakdown: FactorBr
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25 }}
-              className={[
-                'rounded-lg border p-3',
-                pos
-                  ? 'border-blue-200 bg-blue-50 text-blue-800'
-                  : 'border-gray-200 bg-gray-50 text-gray-800',
-              ].join(' ')}
+              className="rounded-2xl border border-gray-200 bg-gray-50 p-4"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-sm font-medium">{it.label}</div>
-                  <div className="text-[11px] mt-1 opacity-80">{it.hint}</div>
+                  <div className="text-sm font-semibold text-gray-950">{it.label}</div>
+                  <div className="mt-1 text-xs text-gray-500">{it.hint}</div>
                 </div>
-                <div className="text-sm font-semibold tabular-nums">{v === null ? '—' : formatValue(v)}</div>
+                <div
+                  className={[
+                    'text-sm font-semibold tabular-nums',
+                    pos ? 'text-emerald-600' : 'text-red-500',
+                  ].join(' ')}
+                >
+                  {v === null ? '—' : formatValue(v)}
+                </div>
+              </div>
+
+              <div className="mt-4 h-2 rounded-full bg-white">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${width}%` }}
+                  transition={{ duration: 0.45, ease: 'easeOut' }}
+                  className={[
+                    'h-2 rounded-full',
+                    pos ? 'bg-emerald-500' : 'bg-red-500',
+                  ].join(' ')}
+                />
               </div>
             </motion.div>
           )

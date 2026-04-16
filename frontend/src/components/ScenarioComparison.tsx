@@ -14,9 +14,10 @@ type Props = {
 }
 
 function approvalColor(status: ApprovalStatus | null) {
-  if (!status) return 'bg-gray-50 text-gray-700 border-gray-200'
-  if (status === 'High Approval') return 'bg-blue-50 text-blue-800 border-blue-200'
-  return 'bg-gray-50 text-gray-800 border-gray-200'
+  if (!status) return 'border-gray-200 bg-white text-gray-700'
+  if (status === 'High Approval') return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+  if (status === 'Moderate Approval') return 'border-blue-200 bg-blue-50 text-blue-700'
+  return 'border-red-200 bg-red-50 text-red-700'
 }
 
 function formatDelta(v: number) {
@@ -109,27 +110,34 @@ export default function ScenarioComparison({ current, inputs, onCompare }: Props
   const delta = result?.delta_score ?? 0
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-sm font-semibold text-gray-900">Scenario comparison</div>
-          <div className="text-xs text-gray-500 mt-1">
-            Simulate improvements and compare score deltas.
+          <div className="text-xs font-medium uppercase tracking-[0.18em] text-gray-500">
+            Scenario Simulator
+          </div>
+          <div className="mt-2 text-lg font-semibold text-gray-950">
+            Run a what-if improvement path
+          </div>
+          <div className="mt-1 text-sm text-gray-500">
+            Compare current score against a cleaner behavior profile.
           </div>
         </div>
-        <div className="text-right text-xs text-gray-500">
+        <div className="text-right text-xs font-medium text-gray-500">
           {isImprovementLikely ? 'Likely improves score' : 'Adjust targets to see change'}
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
-          <div className="text-xs text-gray-500">Target utilization (%)</div>
-          <div className="text-sm font-semibold tabular-nums text-gray-900 mt-1">
+      <div className="mt-6 space-y-4">
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+          <div className="text-xs font-medium uppercase tracking-[0.14em] text-gray-500">
+            Target utilization
+          </div>
+          <div className="mt-2 text-lg font-semibold tabular-nums text-gray-950">
             {targetUtilization}%
           </div>
           <input
-            className="mt-3 w-full accent-blue-600"
+            className="fintech-slider mt-4 w-full accent-black"
             type="range"
             min={0}
             max={100}
@@ -139,13 +147,15 @@ export default function ScenarioComparison({ current, inputs, onCompare }: Props
           />
         </div>
 
-        <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
-          <div className="text-xs text-gray-500">Target missed payments</div>
-          <div className="text-sm font-semibold tabular-nums text-gray-900 mt-1">
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+          <div className="text-xs font-medium uppercase tracking-[0.14em] text-gray-500">
+            Target missed payments
+          </div>
+          <div className="mt-2 text-lg font-semibold tabular-nums text-gray-950">
             {targetMissed} missed
           </div>
           <input
-            className="mt-3 w-full accent-blue-600"
+            className="fintech-slider mt-4 w-full accent-black"
             type="range"
             min={0}
             max={12}
@@ -155,13 +165,15 @@ export default function ScenarioComparison({ current, inputs, onCompare }: Props
           />
         </div>
 
-        <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
-          <div className="text-xs text-gray-500">Target recent inquiries</div>
-          <div className="text-sm font-semibold tabular-nums text-gray-900 mt-1">
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+          <div className="text-xs font-medium uppercase tracking-[0.14em] text-gray-500">
+            Target inquiries
+          </div>
+          <div className="mt-2 text-lg font-semibold tabular-nums text-gray-950">
             {targetInquiries} inquiries
           </div>
           <input
-            className="mt-3 w-full accent-blue-600"
+            className="fintech-slider mt-4 w-full accent-black"
             type="range"
             min={0}
             max={12}
@@ -171,19 +183,21 @@ export default function ScenarioComparison({ current, inputs, onCompare }: Props
           />
         </div>
 
-        <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
-          <div className="text-xs text-gray-500">Target credit mix</div>
-          <div className="text-sm font-semibold text-gray-900 mt-1 capitalize">{targetMix}</div>
-          <div className="mt-2 flex flex-wrap gap-2">
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+          <div className="text-xs font-medium uppercase tracking-[0.14em] text-gray-500">
+            Target credit mix
+          </div>
+          <div className="mt-2 text-lg font-semibold text-gray-950 capitalize">{targetMix}</div>
+          <div className="mt-3 grid grid-cols-3 gap-2">
             {(['good', 'average', 'poor'] as CreditMix[]).map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => setTargetMix(m)}
                 className={[
-                  'rounded-full px-3 py-1 text-xs border transition capitalize',
+                  'rounded-2xl border px-3 py-3 text-left text-sm font-medium capitalize transition',
                   targetMix === m
-                    ? 'border-blue-200 bg-blue-50 text-blue-800'
+                    ? 'border-gray-900 bg-gray-950 text-white'
                     : 'border-gray-200 bg-white text-gray-800 hover:bg-gray-50',
                 ].join(' ')}
               >
@@ -194,23 +208,23 @@ export default function ScenarioComparison({ current, inputs, onCompare }: Props
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3">
+      <div className="mt-5">
         <button
           type="button"
           disabled={!current || loading}
           onClick={compare}
           className={[
-            'rounded-lg px-4 py-2 text-sm font-medium border transition',
+            'w-full rounded-2xl px-4 py-3 text-sm font-medium transition',
             !current || loading
-              ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-              : 'border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100',
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-gray-950 text-white hover:opacity-90',
           ].join(' ')}
         >
-          {loading ? 'Comparing…' : 'Compare scenario'}
+          {loading ? 'Running simulation…' : 'Run Simulation'}
         </button>
-
-        {error ? <div className="text-xs text-rose-700">{error}</div> : null}
       </div>
+
+      {error ? <div className="mt-3 text-sm text-red-500">{error}</div> : null}
 
       <AnimatePresence>
         {result ? (
@@ -221,40 +235,49 @@ export default function ScenarioComparison({ current, inputs, onCompare }: Props
             exit={{ opacity: 0 }}
             className="mt-5"
           >
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="text-sm font-semibold text-gray-900">Result</div>
-                <div
-                  className={[
-                    'rounded-full border px-3 py-2 text-xs font-medium',
-                    result.delta_score >= 0
-                      ? 'border-blue-200 bg-blue-50 text-blue-800'
-                      : 'border-gray-200 bg-white text-gray-800',
-                  ].join(' ')}
-                >
-                  Delta: {delta >= 0 ? '+' : ''}
-                  {delta} pts
-                </div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+              <div className="text-xs font-medium uppercase tracking-[0.14em] text-gray-500">
+                Simulation result
               </div>
+              <div
+                className={[
+                  'mt-3 text-5xl font-semibold tracking-tight tabular-nums',
+                  result.delta_score >= 0 ? 'text-emerald-500' : 'text-red-500',
+                ].join(' ')}
+              >
+                {delta >= 0 ? '+' : ''}
+                {delta}
+              </div>
+              <div className="mt-1 text-sm text-gray-500">Projected score delta</div>
 
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
-                  <div className="text-xs text-gray-500">Current</div>
-                  <div className="text-2xl font-semibold tabular-nums mt-1">{result.current.credit_score}</div>
-                  <div className={`mt-2 inline-flex items-center rounded-full border px-3 py-1 text-xs ${approvalColor(result.current.approval_status)}`}>
+              <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                  <div className="text-xs font-medium uppercase tracking-[0.14em] text-gray-500">
+                    Before
+                  </div>
+                  <div className="mt-2 text-3xl font-semibold tabular-nums text-gray-950">
+                    {result.current.credit_score}
+                  </div>
+                  <div className={`mt-3 inline-flex items-center rounded-full border px-3 py-1 text-xs ${approvalColor(result.current.approval_status)}`}>
                     {result.current.approval_status}
                   </div>
                 </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
-                  <div className="text-xs text-gray-500">Improved scenario</div>
-                  <div className="text-2xl font-semibold tabular-nums mt-1">{result.improved.credit_score}</div>
-                  <div className={`mt-2 inline-flex items-center rounded-full border px-3 py-1 text-xs ${approvalColor(result.improved.approval_status)}`}>
+                <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                  <div className="text-xs font-medium uppercase tracking-[0.14em] text-gray-500">
+                    After
+                  </div>
+                  <div className="mt-2 text-3xl font-semibold tabular-nums text-gray-950">
+                    {result.improved.credit_score}
+                  </div>
+                  <div className={`mt-3 inline-flex items-center rounded-full border px-3 py-1 text-xs ${approvalColor(result.improved.approval_status)}`}>
                     {result.improved.approval_status}
                   </div>
                 </div>
               </div>
 
-              <div className="text-sm text-gray-800 mt-4 whitespace-pre-wrap">{result.scenario_explanation}</div>
+              <div className="mt-5 rounded-2xl border border-gray-200 bg-white p-4 text-sm leading-6 text-gray-700">
+                {result.scenario_explanation}
+              </div>
             </div>
 
             <FactorDeltas deltas={result.factor_deltas} />

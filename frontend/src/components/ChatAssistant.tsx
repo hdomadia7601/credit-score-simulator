@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { CreditInputs, ExplanationResponse, ScoreResponse } from '../lib/types'
 
@@ -32,6 +32,7 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
   const [draft, setDraft] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const scrollerRef = useRef<HTMLDivElement | null>(null)
 
   const quickQuestions = useMemo(
     () => [
@@ -41,6 +42,12 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
     ],
     [],
   )
+
+  useEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
+    el.scrollTop = el.scrollHeight
+  }, [messages, loading])
 
   async function send(question: string) {
     const q = question.trim()
@@ -60,6 +67,7 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
         text: res.assistant_response,
       }
       setMessages((m) => [...m, assistantMsg])
+      setDraft('')
     } catch {
       setError('Could not reach the explanation service.')
     } finally {
@@ -68,16 +76,23 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-sm font-semibold text-gray-900">Credit advisor</div>
-          <div className="text-xs text-gray-500 mt-1">AI-powered guidance based on your current scenario.</div>
+          <div className="text-xs font-medium uppercase tracking-[0.18em] text-gray-500">
+            Chat Assistant
+          </div>
+          <div className="mt-2 text-lg font-semibold text-gray-950">Ask follow-up questions</div>
+          <div className="mt-1 text-sm text-gray-500">
+            ChatGPT-lite guidance grounded in the current score state.
+          </div>
         </div>
-        <div className="text-right text-xs text-gray-500">{score ? `Score: ${score.credit_score}` : 'Compute score'}</div>
+        <div className="text-right text-xs font-medium text-gray-500">
+          {score ? `Score ${score.credit_score}` : 'Compute score'}
+        </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-5">
         <div className="flex flex-wrap gap-2">
           {quickQuestions.map((q) => (
             <button
@@ -86,10 +101,10 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
               disabled={disabled || loading || !score}
               onClick={() => send(q)}
               className={[
-                'rounded-full px-3 py-1 text-xs border transition',
+                'rounded-full border px-3 py-1.5 text-xs font-medium transition',
                 disabled || loading || !score
                   ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-                  : 'border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100',
+                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50',
               ].join(' ')}
             >
               {q}
@@ -98,8 +113,8 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
         </div>
       </div>
 
-      <div className="mt-4">
-        <div className="max-h-[360px] overflow-auto pr-2">
+      <div className="mt-5 overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+        <div ref={scrollerRef} className="max-h-[420px] overflow-auto p-4">
           <AnimatePresence initial={false}>
             {messages.map((m) => (
               <motion.div
@@ -107,14 +122,14 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className={m.role === 'user' ? 'flex justify-end my-2' : 'flex justify-start my-2'}
+                className={m.role === 'user' ? 'my-2 flex justify-end' : 'my-2 flex justify-start'}
               >
                 <div
                   className={[
-                    'rounded-xl px-3 py-2 text-sm border',
+                    'max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm',
                     m.role === 'user'
-                      ? 'bg-blue-50 border-blue-200 text-gray-900'
-                      : 'bg-white border-gray-200 text-gray-900',
+                      ? 'bg-gray-950 text-white'
+                      : 'border border-gray-200 bg-white text-gray-900',
                   ].join(' ')}
                 >
                   {m.text}
@@ -122,34 +137,46 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
               </motion.div>
             ))}
           </AnimatePresence>
+
+          {loading ? (
+            <div className="my-2 flex justify-start">
+              <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-sm">
+                Thinking...
+              </div>
+            </div>
+          ) : null}
         </div>
 
-        {error ? <div className="text-xs text-rose-700 mt-2">{error}</div> : null}
-
-        <div className="mt-3 flex items-center gap-2">
-          <input
-            className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
-            placeholder={score ? 'Type your question…' : 'Compute a score to enable chat'}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            disabled={disabled || loading || !score}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') send(draft)
-            }}
-          />
-          <button
-            type="button"
-            disabled={disabled || loading || !score || !draft.trim()}
-            onClick={() => send(draft)}
-            className={[
-              'rounded-lg px-4 py-2 text-sm font-medium border transition',
-              disabled || loading || !score || !draft.trim()
-                ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-                : 'border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100',
-            ].join(' ')}
-          >
-            {loading ? '…' : 'Send'}
-          </button>
+        <div className="border-t border-gray-200 bg-white p-3">
+          {error ? <div className="mb-2 text-xs text-red-500">{error}</div> : null}
+          <div className="relative">
+            <input
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 pr-24 text-sm outline-none transition focus:border-gray-900 focus:bg-white"
+              placeholder={score ? 'Type your question…' : 'Compute a score to enable chat'}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              disabled={disabled || loading || !score}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  void send(draft)
+                }
+              }}
+            />
+            <button
+              type="button"
+              disabled={disabled || loading || !score || !draft.trim()}
+              onClick={() => send(draft)}
+              className={[
+                'absolute right-2 top-1/2 -translate-y-1/2 rounded-xl px-4 py-2 text-sm font-medium transition',
+                disabled || loading || !score || !draft.trim()
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-950 text-white hover:opacity-90',
+              ].join(' ')}
+            >
+              {loading ? '...' : 'Send'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

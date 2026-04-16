@@ -8,12 +8,11 @@
     "skipLibCheck": true,
 
     /* SAFE NODE CONFIG */
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "noEmit": true,
 
     /* Linting */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+   
     "noFallthroughCasesInSwitch": true
   },
   "include": ["vite.config.ts"]

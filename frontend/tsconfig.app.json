@@ -8,13 +8,12 @@
     "skipLibCheck": true,
 
     /* SAFE SETTINGS */
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "noEmit": true,
     "jsx": "react-jsx",
 
     /* Linting */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"]

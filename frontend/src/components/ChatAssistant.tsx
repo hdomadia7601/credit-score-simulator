@@ -3,17 +3,22 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { CreditInputs, ExplanationResponse, ScoreResponse } from '../lib/types'
 
-type Props = {
-  disabled: boolean
-  inputs: CreditInputs
-  score: ScoreResponse | null
-  onAsk: (args: { question: string }) => Promise<ExplanationResponse>
-}
-
+// ✅ NEW TYPE FOR HISTORY
 type ChatMessage = {
   id: string
   role: 'user' | 'assistant'
   text: string
+}
+
+// ✅ FIXED PROPS TYPE (history added)
+type Props = {
+  disabled: boolean
+  inputs: CreditInputs
+  score: ScoreResponse | null
+  onAsk: (args: {
+    question: string
+    history: { role: string; content: string }[]
+  }) => Promise<ExplanationResponse>
 }
 
 function makeId() {
@@ -22,6 +27,7 @@ function makeId() {
 
 export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props) {
   void inputs
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: makeId(),
@@ -29,6 +35,7 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
       text: 'Ask a question like “How can I improve my score fastest?” and I’ll tailor it to your inputs.',
     },
   ])
+
   const [draft, setDraft] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -56,16 +63,28 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
 
     setError(null)
     setLoading(true)
+
     const userMsg: ChatMessage = { id: makeId(), role: 'user', text: q }
     setMessages((m) => [...m, userMsg])
 
     try {
-      const res = await onAsk({ question: q })
+      // ✅ BUILD HISTORY FROM CHAT
+      const history = messages.map((m) => ({
+        role: m.role,
+        content: m.text,
+      }))
+
+      const res = await onAsk({
+        question: q,
+        history,
+      })
+
       const assistantMsg: ChatMessage = {
         id: makeId(),
         role: 'assistant',
         text: res.assistant_response,
       }
+
       setMessages((m) => [...m, assistantMsg])
       setDraft('')
     } catch {
@@ -82,7 +101,9 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
           <div className="text-xs font-medium uppercase tracking-[0.18em] text-gray-500">
             Chat Assistant
           </div>
-          <div className="mt-2 text-lg font-semibold text-gray-950">Ask follow-up questions</div>
+          <div className="mt-2 text-lg font-semibold text-gray-950">
+            Ask follow-up questions
+          </div>
           <div className="mt-1 text-sm text-gray-500">
             ChatGPT-lite guidance grounded in the current score state.
           </div>
@@ -138,17 +159,18 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
             ))}
           </AnimatePresence>
 
-          {loading ? (
+          {loading && (
             <div className="my-2 flex justify-start">
               <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-sm">
                 Thinking...
               </div>
             </div>
-          ) : null}
+          )}
         </div>
 
         <div className="border-t border-gray-200 bg-white p-3">
-          {error ? <div className="mb-2 text-xs text-red-500">{error}</div> : null}
+          {error && <div className="mb-2 text-xs text-red-500">{error}</div>}
+
           <div className="relative">
             <input
               className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 pr-24 text-sm outline-none transition focus:border-gray-900 focus:bg-white"
@@ -163,6 +185,7 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
                 }
               }}
             />
+
             <button
               type="button"
               disabled={disabled || loading || !score || !draft.trim()}
@@ -182,4 +205,3 @@ export default function ChatAssistant({ disabled, inputs, score, onAsk }: Props)
     </div>
   )
 }
-
